@@ -2,8 +2,9 @@ import numpy as np
 from sklearn.cross_validation import train_test_split
 from numpy.linalg import inv
 from numpy import linalg as LA
+import matplotlib.pyplot as plt
 
-class linear_regression:
+class LinearRegression:
     def __init__(self):
         self.W = np.array
 
@@ -12,11 +13,21 @@ class linear_regression:
 
     def fit(self, X, y, _lambda):
         self.W = np.dot(inv(np.dot(np.transpose(X), X) + np.dot(_lambda, np.eye(X.shape[1]))), (np.dot(np.transpose(X), y)))
-        print self.mse(X, y)
+
+    def predict(self, X):
+        return np.dot(X, self.W)
+
+
+def mse(y_true, y_predict):
+    return LA.norm(y_true - y_predict)
+
 
 TrainingInputs = "/home/2015/wzhang77/Documents/COMP652/hw1x.txt"
 TrainingOutputs = "/home/2015/wzhang77/Documents/COMP652/hw1y.txt"
 
+##################################################################################
+# Load the data into memory
+##################################################################################
 # Load all training inputs
 train_inputs = []
 with open(TrainingInputs, 'rb') as train_file:
@@ -43,12 +54,21 @@ constant = np.ones((X.shape[0], 1), dtype='float32')
 X = np.append(X, constant, axis=1)
 y = np.asarray(train_outputs, dtype='float32')
 
+
+##################################################################################
+# Split the data randomly
+##################################################################################
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
-lr = linear_regression()
-lr.fit(X_train, y_train, 0.0)
-lr.fit(X_train, y_train, 0.1)
-lr.fit(X_train, y_train, 1)
-lr.fit(X_train, y_train, 10)
-lr.fit(X_train, y_train, 100)
-lr.fit(X_train, y_train, 1000)
+
+##################################################################################
+# Run linear regression on the data using L2 regularization
+##################################################################################
+lr = LinearRegression()
+_lambda = [0, 0.1, 1, 10, 100, 1000]
+for para in _lambda:
+    lr.fit(X_train, y_train, para)
+    y_predict = lr.predict(X_train)
+    print "train error " + str(mse(y_train, y_predict))
+    y_predict = lr.predict(X_test)
+    print "test error " + str(mse(y_test, y_predict))
