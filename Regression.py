@@ -29,8 +29,41 @@ def L2(w):
 
 
 def gaussian(x, mu, sigma):
-    y = 1 / (sqrt(2 * pi) * sigma) * exp(-0.5 * (float(x - mu) / sigma)**2)
+    y = exp(-1.0 * (x - mu) ** 2 / (2 * sigma ** 2))
     return y
+
+
+def experiment(X, y):
+    ##################################################################################
+    # Split the data randomly
+    ##################################################################################
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+
+
+    ##################################################################################
+    # Run linear regression on the data using L2 regularization
+    ##################################################################################
+    lr = LinearRegression()
+    _lambda = [0]
+    plot_lambda = []
+    train_rmse = []
+    test_rmse = []
+    for para in _lambda:
+        plot_lambda.append(log(para, 10))
+        lr.fit(X_train, y_train, para)
+        y_predict = lr.predict(X_train)
+        train_rmse.append(rmse(y_train, y_predict))
+        y_predict = lr.predict(X_test)
+        test_rmse.append(rmse(y_test, y_predict))
+    '''
+    plt.xlabel('log(lambda)')
+    plt.ylabel('RMSE')
+    plt.plot(plot_lambda, train_rmse, 'r')
+    plt.plot(plot_lambda, test_rmse, 'b')
+    plt.show()
+    '''
+    return train_rmse, test_rmse
+
 
 TrainingInputs = "/home/2015/wzhang77/Documents/COMP652/hw1x.txt"
 TrainingOutputs = "/home/2015/wzhang77/Documents/COMP652/hw1y.txt"
@@ -88,10 +121,8 @@ for para in _lambda:
     plot_lambda.append(log(para, 10))
     lr.fit(X_train, y_train, para)
     y_predict = lr.predict(X_train)
-    print "train error " + str(rmse(y_train, y_predict))
     train_rmse.append(rmse(y_train, y_predict))
     y_predict = lr.predict(X_test)
-    print "test error " + str(rmse(y_test, y_predict))
     test_rmse.append(rmse(y_test, y_predict))
     # Cal L2-norm of weight vector
     weigh_vector_L2.append(L2(lr.weight_vector()))
@@ -120,11 +151,12 @@ plt.show()
 ##################################################################################
 _mu = [-9, -7, -5, -3, -1, 1, 3, 5, 7, 9]
 _sigma = [0.1, 0.5, 1, 5, 10]
-new_X = constant
-for mu in _mu:
-    for i in range(0, 3):
-        gaussian_x = [gaussian(x, mu, 0.5) for x in X[:, i]]
-        temp = np.asarray(gaussian_x, dtype='float32').reshape(new_X.shape[0], 1)
-        new_X = np.append(new_X, temp, axis=1)
-print new_X.shape
+for sigma in _sigma:
+    new_X = constant
+    for mu in _mu:
+        for i in range(0, 3):
+            gaussian_x = [gaussian(x, mu, sigma) for x in X[:, i]]
+            temp = np.asarray(gaussian_x, dtype='float32').reshape(new_X.shape[0], 1)
+            new_X = np.append(new_X, temp, axis=1)
+    experiment(new_X, y)
 
